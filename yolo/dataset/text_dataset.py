@@ -34,7 +34,7 @@ class TextDataSet(DataSet):
     self.max_objects = int(common_params['max_objects_per_image'])
 
     #record and image_label queue
-    self.record_queue = Queue()
+    self.record_queue = Queue(maxsize=10000)
     self.image_label_queue = Queue(maxsize=512)
 
     self.record_list = []  

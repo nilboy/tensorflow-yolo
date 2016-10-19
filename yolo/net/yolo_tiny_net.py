@@ -203,7 +203,7 @@ class YoloTinyNet(Net):
     iou_predict_truth = self.iou(predict_boxes, label[0:4])
 
     #calculate I tensor [CELL_SIZE, CELL_SIZE, BOXES_PER_CELL]
-    I = iou_predict_truth
+    I = iou_predict_truth * tf.reshape(response, (self.cell_size, self.cell_size, 1))
 
     max_I = tf.reduce_max(I, 2, keep_dims=True)
 
