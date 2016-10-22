@@ -184,7 +184,8 @@ class YoloTinyNet(Net):
     temp = tf.cast(tf.pack([center_y, self.cell_size - center_y - 1, center_x, self.cell_size -center_x - 1]), tf.int32)
     temp = tf.reshape(temp, (2, 2))
     response = tf.pad(response, temp, "CONSTANT")
-
+    
+    objects = response
     #calculate iou_predict_truth [CELL_SIZE, CELL_SIZE, BOXES_PER_CELL]
     predict_boxes = predict[:, :, self.num_classes + self.boxes_per_cell:]
     predict_boxes = tf.reshape(predict_boxes, [self.cell_size, self.cell_size, self.boxes_per_cell, 4])
@@ -195,7 +196,7 @@ class YoloTinyNet(Net):
 
     for y in range(self.cell_size):
       for x in range(self.cell_size):
-        base_boxes[y, x, :] = [self.image_size / self.cell_size * y, self.image_size / self.cell_size * x, 0, 0]
+        base_boxes[y, x, :] = [self.image_size / self.cell_size * x, self.image_size / self.cell_size * y, 0, 0]
     base_boxes = np.tile(np.resize(base_boxes, [self.cell_size, self.cell_size, 1, 4]), [1, 1, self.boxes_per_cell, 1])
 
     predict_boxes = base_boxes + predict_boxes
@@ -230,8 +231,8 @@ class YoloTinyNet(Net):
 
     #p_sqrt_w = tf.sqrt(tf.abs(predict_boxes[:, :, :, 2])) * ((tf.cast(predict_boxes[:, :, :, 2] > 0, tf.float32) * 2) - 1)
     #p_sqrt_h = tf.sqrt(tf.abs(predict_boxes[:, :, :, 3])) * ((tf.cast(predict_boxes[:, :, :, 3] > 0, tf.float32) * 2) - 1)
-    p_sqrt_w = tf.sqrt(tf.maximum(0.0, predict_boxes[:, :, :, 2]))
-    p_sqrt_h = tf.sqrt(tf.maximum(0.0, predict_boxes[:, :, :, 3]))
+    p_sqrt_w = tf.sqrt(tf.minimum(self.image_size * 1.0, tf.maximum(0.0, predict_boxes[:, :, :, 2])))
+    p_sqrt_h = tf.sqrt(tf.minimum(self.image_size * 1.0, tf.maximum(0.0, predict_boxes[:, :, :, 3])))
 
     #calculate truth p 1-D tensor [NUM_CLASSES]
     P = tf.one_hot(tf.cast(label[4], tf.int32), self.num_classes, dtype=tf.float32)
@@ -246,13 +247,13 @@ class YoloTinyNet(Net):
     object_loss = tf.nn.l2_loss(I * (p_C - C)) * self.object_scale
 
     #noobject_loss
-    noobject_loss = tf.nn.l2_loss(no_I * (p_C - C)) * self.noobject_scale
+    noobject_loss = tf.nn.l2_loss(no_I * (p_C)) * self.noobject_scale
 
     #coord_loss
     coord_loss = (tf.nn.l2_loss(I * (p_x - x)/(self.image_size/self.cell_size)) +
                  tf.nn.l2_loss(I * (p_y - y)/(self.image_size/self.cell_size)) +
-                 tf.nn.l2_loss(I * (p_sqrt_w - sqrt_w)/(self.image_size)) +
-                 tf.nn.l2_loss(I * (p_sqrt_h - sqrt_h)/(self.image_size))) * self.coord_scale
+                 tf.nn.l2_loss(I * (p_sqrt_w - sqrt_w))/(self.image_size) +
+                 tf.nn.l2_loss(I * (p_sqrt_h - sqrt_h))/(self.image_size)) * self.coord_scale
 
     return num + 1, object_num, loss + class_loss + object_loss + noobject_loss + coord_loss, predict, labels
 
@@ -268,6 +269,7 @@ class YoloTinyNet(Net):
       objects_num: 1-D tensor [batch_size]
     """
     loss = tf.constant(0, tf.float32)
+
     for i in range(self.batch_size):
       predict = predicts[i, :, :, :]
       label = labels[i, :, :]
