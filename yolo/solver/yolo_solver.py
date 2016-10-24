@@ -59,13 +59,14 @@ class YoloSolver(Solver):
     self.objects_num = tf.placeholder(tf.int32, (self.batch_size))
 
     self.predicts = self.net.inference(self.images)
-    self.total_loss = self.net.loss(self.predicts, self.labels, self.objects_num)
+    self.total_loss, self.nilboy = self.net.loss(self.predicts, self.labels, self.objects_num)
     
     tf.scalar_summary('loss', self.total_loss)
     self.train_op = self._train()
 
   def solve(self):
-    saver1 = tf.train.Saver(self.net.pretrained_collection)
+    #saver1 = tf.train.Saver(self.net.pretrained_collection)
+    saver1 = tf.train.Saver(self.net.trainable_collection)
     saver2 = tf.train.Saver(self.net.trainable_collection)
 
     init =  tf.initialize_all_variables()
@@ -84,7 +85,9 @@ class YoloSolver(Solver):
       start_time = time.time()
       np_images, np_labels, np_objects_num = self.dataset.batch()
 
-      _, loss_value = sess.run([self.train_op, self.total_loss], feed_dict={self.images: np_images, self.labels: np_labels, self.objects_num: np_objects_num})
+      _, loss_value, nilboy = sess.run([self.train_op, self.total_loss, self.nilboy], feed_dict={self.images: np_images, self.labels: np_labels, self.objects_num: np_objects_num})
+      #loss_value, nilboy = sess.run([self.total_loss, self.nilboy], feed_dict={self.images: np_images, self.labels: np_labels, self.objects_num: np_objects_num})
+
 
       duration = time.time() - start_time
 
