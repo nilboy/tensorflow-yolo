@@ -234,8 +234,8 @@ class YoloTinyNet(Net):
     #class_loss = tf.nn.l2_loss(tf.reshape(response, (self.cell_size, self.cell_size, 1)) * (p_P - P)) * self.class_scale
 
     #object_loss
-    #object_loss = tf.nn.l2_loss(I * (p_C - C)) * self.object_scale
-    object_loss = tf.nn.l2_loss(I * (p_C - (C + 1.0)/2.0)) * self.object_scale
+    object_loss = tf.nn.l2_loss(I * (p_C - C)) * self.object_scale
+    #object_loss = tf.nn.l2_loss(I * (p_C - (C + 1.0)/2.0)) * self.object_scale
 
     #noobject_loss
     #noobject_loss = tf.nn.l2_loss(no_I * (p_C - C)) * self.noobject_scale
