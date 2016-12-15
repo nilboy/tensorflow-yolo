@@ -62,7 +62,7 @@ predicts = net.inference(image)
 
 sess = tf.Session()
 
-np_img = cv2.imread('cat.jpg')
+np_img = cv2.imread('cute-labrador-puppy.jpg')
 resized_img = cv2.resize(np_img, (448, 448))
 np_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2RGB)
 
@@ -74,7 +74,7 @@ np_img = np.reshape(np_img, (1, 448, 448, 3))
 
 saver = tf.train.Saver(net.trainable_collection)
 
-saver.restore(sess, 'models/pretrain/yolo_tiny.ckpt')
+saver.restore(sess,'models/pretrain/yolo_tiny.ckpt')
 
 np_predict = sess.run(predicts, feed_dict={image: np_img})
 

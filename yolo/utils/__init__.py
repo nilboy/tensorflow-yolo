@@ -1,1 +1,1 @@
-import process_config
+from . import process_config
