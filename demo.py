@@ -62,7 +62,7 @@ predicts = net.inference(image)
 
 sess = tf.Session()
 
-np_img = cv2.imread('cute-labrador-puppy.jpg')
+np_img = cv2.imread('cat.jpg')
 resized_img = cv2.resize(np_img, (448, 448))
 np_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2RGB)
 
