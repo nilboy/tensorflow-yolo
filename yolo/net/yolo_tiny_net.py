@@ -96,7 +96,7 @@ class YoloTinyNet(Net):
     scales = tf.reshape(local3[:, n1:n2], (-1, self.cell_size, self.cell_size, self.boxes_per_cell))
     boxes = tf.reshape(local3[:, n2:], (-1, self.cell_size, self.cell_size, self.boxes_per_cell * 4))
 
-    local3 = tf.concat(3, [class_probs, scales, boxes])
+    local3 = tf.concat([class_probs, scales, boxes], 3)
 
     predicts = local3
 
@@ -110,10 +110,10 @@ class YoloTinyNet(Net):
     Return:
       iou: 3-D tensor [CELL_SIZE, CELL_SIZE, BOXES_PER_CELL]
     """
-    boxes1 = tf.pack([boxes1[:, :, :, 0] - boxes1[:, :, :, 2] / 2, boxes1[:, :, :, 1] - boxes1[:, :, :, 3] / 2,
+    boxes1 = tf.stack([boxes1[:, :, :, 0] - boxes1[:, :, :, 2] / 2, boxes1[:, :, :, 1] - boxes1[:, :, :, 3] / 2,
                       boxes1[:, :, :, 0] + boxes1[:, :, :, 2] / 2, boxes1[:, :, :, 1] + boxes1[:, :, :, 3] / 2])
     boxes1 = tf.transpose(boxes1, [1, 2, 3, 0])
-    boxes2 =  tf.pack([boxes2[0] - boxes2[2] / 2, boxes2[1] - boxes2[3] / 2,
+    boxes2 =  tf.stack([boxes2[0] - boxes2[2] / 2, boxes2[1] - boxes2[3] / 2,
                       boxes2[0] + boxes2[2] / 2, boxes2[1] + boxes2[3] / 2])
 
     #calculate the left up point
@@ -162,7 +162,7 @@ class YoloTinyNet(Net):
 
     response = tf.ones([1, 1], tf.float32)
 
-    temp = tf.cast(tf.pack([center_y, self.cell_size - center_y - 1, center_x, self.cell_size -center_x - 1]), tf.int32)
+    temp = tf.cast(tf.stack([center_y, self.cell_size - center_y - 1, center_x, self.cell_size -center_x - 1]), tf.int32)
     temp = tf.reshape(temp, (2, 2))
     response = tf.pad(response, temp, "CONSTANT")
     objects = response
@@ -279,10 +279,10 @@ class YoloTinyNet(Net):
 
     tf.add_to_collection('losses', (loss[0] + loss[1] + loss[2] + loss[3])/self.batch_size)
 
-    tf.scalar_summary('class_loss', loss[0]/self.batch_size)
-    tf.scalar_summary('object_loss', loss[1]/self.batch_size)
-    tf.scalar_summary('noobject_loss', loss[2]/self.batch_size)
-    tf.scalar_summary('coord_loss', loss[3]/self.batch_size)
-    tf.scalar_summary('weight_loss', tf.add_n(tf.get_collection('losses')) - (loss[0] + loss[1] + loss[2] + loss[3])/self.batch_size )
+    tf.summary.scalar('class_loss', loss[0]/self.batch_size)
+    tf.summary.scalar('object_loss', loss[1]/self.batch_size)
+    tf.summary.scalar('noobject_loss', loss[2]/self.batch_size)
+    tf.summary.scalar('coord_loss', loss[3]/self.batch_size)
+    tf.summary.scalar('weight_loss', tf.add_n(tf.get_collection('losses')) - (loss[0] + loss[1] + loss[2] + loss[3])/self.batch_size )
 
     return tf.add_n(tf.get_collection('losses'), name='total_loss'), nilboy
