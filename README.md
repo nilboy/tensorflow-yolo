@@ -1,4 +1,7 @@
 #tensorflow-yolo
+
+# Require
+	tensorflow-0.11
 ###download pretrained model
 
 yolo_tiny: <a>https://drive.google.com/file/d/0B-yiAeTLLamRekxqVE01Yi1RRlk/view?usp=sharing</a>
