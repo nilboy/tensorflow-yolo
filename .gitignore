@@ -1,0 +1,11 @@
+.DS_Store
+data/
+train/
+pretrain/
+*.bak
+*.pyc
+__pycache__
+
+
+
+
