@@ -1,4 +1,4 @@
-import configparser
+import ConfigParser
 
 def process_config(conf_file):
   """process configure file to generate CommonParams, DataSetParams, NetParams 
@@ -14,7 +14,7 @@ def process_config(conf_file):
   solver_params = {}
 
   #configure_parser
-  config = configparser.ConfigParser()
+  config = ConfigParser.ConfigParser()
   config.read(conf_file)
 
   #sections and options
