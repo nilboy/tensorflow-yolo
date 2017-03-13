@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -12,11 +14,13 @@ from threading import Thread
 
 from yolo.dataset.dataset import DataSet 
 
+
 class TextDataSet(DataSet):
   """TextDataSet
   process text input file dataset 
   text file format:
     image_path xmin1 ymin1 xmax1 ymax1 class1 xmin2 ymin2 xmax2 ymax2 class2
+  设计思想是采用生产者消费者模式，
   """
 
   def __init__(self, common_params, dataset_params):
@@ -52,11 +56,12 @@ class TextDataSet(DataSet):
     self.record_number = len(self.record_list)
 
     self.num_batch_per_epoch = int(self.record_number / self.batch_size)
-
+    # 创建生产者守护进程并启动
     t_record_producer = Thread(target=self.record_producer)
     t_record_producer.daemon = True 
     t_record_producer.start()
-
+    
+    # 创建thread_num个消费者守护进程并启动
     for i in range(self.thread_num):
       t = Thread(target=self.record_customer)
       t.daemon = True
@@ -109,6 +114,12 @@ class TextDataSet(DataSet):
       labels[object_num] = [xcenter, ycenter, box_w, box_h, class_num]
       object_num += 1
       i += 5
+      # TODO:
+      # 这个地方会不会忽略掉一些显著特征呢？
+      # 因为self.max_objects是自定义的变量，在读取的过程中，
+      # 仅仅读取前面的数据的话，后面的会被忽略掉的。
+      # TODO: 训练数据中每张图片的物体是如何给出的，是根据显著性呢还是根据
+      # 起始点为位置大小给出的呢，这个需要check一下
       if object_num >= self.max_objects:
         break
     return [image, labels, object_num]
@@ -124,9 +135,9 @@ class TextDataSet(DataSet):
   def batch(self):
     """get batch
     Returns:
-      images: 4-D ndarray [batch_size, height, width, 3]
-      labels: 3-D ndarray [batch_size, max_objects, 5]
-      objects_num: 1-D ndarray [batch_size]
+      images: 4-D ndarray [batch_size, height, width, 3] 一个batch中所有图片数据
+      labels: 3-D ndarray [batch_size, max_objects, 5] 一个batch中的所有图片的中的所有物体的标签
+      objects_num: 1-D ndarray [batch_size] 一个batch中每个图片中object的个数
     """
     images = []
     labels = []

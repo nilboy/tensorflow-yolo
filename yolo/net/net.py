@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -51,7 +53,6 @@ class Net(object):
       stddev: standard devision of a truncated Gaussian
       wd: add L2Loss weight decay multiplied by this float. If None, weight 
       decay is not added for this Variable.
-
    Returns:
       Variable Tensor 
     """
@@ -74,16 +75,19 @@ class Net(object):
       output: 4-D tensor [batch_size, height/stride, width/stride, out_channels]
     """
     with tf.variable_scope(scope) as scope:
+      # 初始化权重的kernel
       kernel = self._variable_with_weight_decay('weights', 
                                       shape=kernel_size,
                                       stddev=5e-2,
                                       wd=self.weight_decay, pretrain=pretrain, train=train)
       conv = tf.nn.conv2d(input, kernel, [1, stride, stride, 1], padding='SAME')
-      biases = self._variable_on_cpu('biases', kernel_size[3:], tf.constant_initializer(0.0), pretrain, train)
-      bias = tf.nn.bias_add(conv, biases)
-      conv1 = self.leaky_relu(bias)
 
-    return conv1
+      # biases 初始化采用常数 0.0 初始化
+      biases = self._variable_on_cpu('biases', kernel_size[3:], tf.constant_initializer(0.0), pretrain, train)
+      conv1 = tf.nn.bias_add(conv, biases)
+      output = self.leaky_relu(conv1)
+
+    return output
 
 
   def max_pool(self, input, kernel_size, stride):
@@ -137,6 +141,9 @@ class Net(object):
       y : Tensor
     """
     x = tf.cast(x, dtype=dtype)
+    # 对输入的特征向量进行leaky_relu
+    # 其中对>0的数据采用直接激活的方式，对小于0的数据采用leaky激活方式
+    # 此处实现值得学习和借鉴
     bool_mask = (x > 0)
     mask = tf.cast(bool_mask, dtype=dtype)
     return 1.0 * mask * x + alpha * (1 - mask) * x
@@ -161,3 +168,12 @@ class Net(object):
       objects_num: 1-D tensor [batch_size]
     """
     raise NotImplementedError
+
+'''
+## weight decay：
+在机器学习或者模式识别中，会出现overfitting，而当网络逐渐overfitting时网络
+权值逐渐变大，因此，为了避免出现overfitting,会给误差函数添加一个惩罚项，常用
+的惩罚项是所有权重的平方乘以一个衰减常量之和。其用来惩罚大的权值。
+权值衰减惩罚项使得权值收敛到较小的绝对值，而惩罚大的权值。因为大的权值会使得
+系统出现过拟合，降低其泛化性能。
+'''

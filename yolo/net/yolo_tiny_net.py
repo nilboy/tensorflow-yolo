@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -117,7 +119,10 @@ class YoloTinyNet(Net):
                       boxes2[0] + boxes2[2] / 2, boxes2[1] + boxes2[3] / 2])
 
     #calculate the left up point
+    # boxes相当于grandtruth的box,只有一个
+    # 但是boxes1相当于ROI，是有很多的
     lu = tf.maximum(boxes1[:, :, :, 0:2], boxes2[0:2])
+    # calculate the right down point
     rd = tf.minimum(boxes1[:, :, :, 2:], boxes2[2:])
 
     #intersection
@@ -135,13 +140,14 @@ class YoloTinyNet(Net):
     
     return inter_square/(square1 + square2 - inter_square + 1e-6)
 
+  # loop停止函数和后面的运行函数体的输入参数是一致的，输入相同的参数数据
   def cond1(self, num, object_num, loss, predict, label, nilboy):
     """
     if num < object_num
     """
     return num < object_num
 
-
+  # 运行的函数体的定义
   def body1(self, num, object_num, loss, predict, labels, nilboy):
     """
     calculate loss
@@ -202,10 +208,10 @@ class YoloTinyNet(Net):
 
     p_C = predict[:, :, self.num_classes:self.num_classes + self.boxes_per_cell]
 
-    #calculate truth x,y,sqrt_w,sqrt_h 0-D
+    #calculate truth x, y, sqrt_w, sqrt_h 0-D
     x = label[0]
     y = label[1]
-
+    # TODO:为啥要使用sqrt的宽度和高度来
     sqrt_w = tf.sqrt(tf.abs(label[2]))
     sqrt_h = tf.sqrt(tf.abs(label[3]))
     #sqrt_w = tf.abs(label[2])
@@ -223,6 +229,7 @@ class YoloTinyNet(Net):
     #p_sqrt_h = predict_boxes[:, :, :, 3]
     p_sqrt_w = tf.sqrt(tf.minimum(self.image_size * 1.0, tf.maximum(0.0, predict_boxes[:, :, :, 2])))
     p_sqrt_h = tf.sqrt(tf.minimum(self.image_size * 1.0, tf.maximum(0.0, predict_boxes[:, :, :, 3])))
+    
     #calculate truth p 1-D tensor [NUM_CLASSES]
     P = tf.one_hot(tf.cast(label[4], tf.int32), self.num_classes, dtype=tf.float32)
 
@@ -262,17 +269,27 @@ class YoloTinyNet(Net):
       labels  : 3-D tensor of [batch_size, max_objects, 5]
       objects_num: 1-D tensor [batch_size]
     """
-    class_loss = tf.constant(0, tf.float32)
-    object_loss = tf.constant(0, tf.float32)
-    noobject_loss = tf.constant(0, tf.float32)
-    coord_loss = tf.constant(0, tf.float32)
+    # 定义不同的loss变量
+    class_loss = tf.constant(0, tf.float32)       # 分类损失
+    object_loss = tf.constant(0, tf.float32)      # 有对象的时候与ground truth的损失
+    noobject_loss = tf.constant(0, tf.float32)    # 预测框中没有对象的时候的损失
+    coord_loss = tf.constant(0, tf.float32)       # 
+
     loss = [0, 0, 0, 0]
     for i in range(self.batch_size):
       predict = predicts[i, :, :, :]
       label = labels[i, :, :]
       object_num = objects_num[i]
       nilboy = tf.ones([7,7,2])
-      tuple_results = tf.while_loop(self.cond1, self.body1, [tf.constant(0), object_num, [class_loss, object_loss, noobject_loss, coord_loss], predict, label, nilboy])
+      tuple_results = tf.while_loop(self.cond1,# 其输入参数就是后面list中的变量
+                                    self.body1,# 输入参数就是其后的list变量，详细见其定义 
+                                    [  tf.constant(0), 
+                                       object_num, 
+                                       [class_loss, object_loss, noobject_loss, coord_loss], 
+                                       predict, 
+                                       label, 
+                                       nilboy
+                                    ])
       for j in range(4):
         loss[j] = loss[j] + tuple_results[2][j]
       nilboy = tuple_results[5]

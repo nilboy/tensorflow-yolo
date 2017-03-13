@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
 """preprocess pascal_voc data
 """
 import os
