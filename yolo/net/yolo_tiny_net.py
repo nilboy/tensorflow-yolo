@@ -153,6 +153,26 @@ class YoloTinyNet(Net):
     label = tf.reshape(label, [-1])
 
     #calculate objects  tensor [CELL_SIZE, CELL_SIZE]
+    min_x = (label[0] - label[2] / 2) / (self.image_size / self.cell_size)
+    max_x = (label[0] + label[2] / 2) / (self.image_size / self.cell_size)
+
+    min_y = (label[1] - label[3] / 2) / (self.image_size / self.cell_size)
+    max_y = (label[1] + label[3] / 2) / (self.image_size / self.cell_size)
+
+    min_x = tf.floor(min_x)
+    min_y = tf.floor(min_y)
+
+    max_x = tf.ceil(max_x)
+    max_y = tf.ceil(max_y)
+
+    temp = tf.cast(tf.stack([max_y - min_y, max_x - min_x]), dtype=tf.int32)
+    objects = tf.ones(temp, tf.float32)
+
+    temp = tf.cast(tf.stack([min_y, self.cell_size - max_y, min_x, self.cell_size - max_x]), tf.int32)
+    temp = tf.reshape(temp, (2, 2))
+    objects = tf.pad(objects, temp, "CONSTANT")
+
+    #calculate objects  tensor [CELL_SIZE, CELL_SIZE]
     #calculate responsible tensor [CELL_SIZE, CELL_SIZE]
     center_x = label[0] / (self.image_size / self.cell_size)
     center_x = tf.floor(center_x)
@@ -165,7 +185,7 @@ class YoloTinyNet(Net):
     temp = tf.cast(tf.stack([center_y, self.cell_size - center_y - 1, center_x, self.cell_size -center_x - 1]), tf.int32)
     temp = tf.reshape(temp, (2, 2))
     response = tf.pad(response, temp, "CONSTANT")
-    objects = response
+    #objects = response
 
     #calculate iou_predict_truth [CELL_SIZE, CELL_SIZE, BOXES_PER_CELL]
     predict_boxes = predict[:, :, self.num_classes + self.boxes_per_cell:]
@@ -187,7 +207,7 @@ class YoloTinyNet(Net):
 
     iou_predict_truth = self.iou(predict_boxes, label[0:4])
     #calculate C [cell_size, cell_size, boxes_per_cell]
-    C = iou_predict_truth * tf.reshape(objects, [self.cell_size, self.cell_size, 1])
+    C = iou_predict_truth * tf.reshape(response, [self.cell_size, self.cell_size, 1])
 
     #calculate I tensor [CELL_SIZE, CELL_SIZE, BOXES_PER_CELL]
     I = iou_predict_truth * tf.reshape(response, (self.cell_size, self.cell_size, 1))
