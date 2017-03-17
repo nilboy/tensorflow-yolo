@@ -103,7 +103,7 @@ class Net(object):
     return tf.nn.max_pool(input, ksize=[1, kernel_size[0], kernel_size[1], 1], strides=[1, stride, stride, 1],
                   padding='SAME')
 
-  def local(self, scope, input, in_dimension, out_dimension, leaky=True, pretrain=True, train=True):
+  def local(self, scope, _input, in_dimension, out_dimension, leaky=True, pretrain=True, train=True):
     """Fully connection layer
 
     Args:
@@ -114,7 +114,7 @@ class Net(object):
       output: 2-D tensor [batch_size, out_dimension]
     """
     with tf.variable_scope(scope) as scope:
-      reshape = tf.reshape(input, [tf.shape(input)[0], -1])
+      reshape = tf.reshape(_input, [tf.shape(_input)[0], -1])
 
       weights = self._variable_with_weight_decay('weights', shape=[in_dimension, out_dimension],
                           stddev=0.04, wd=self.weight_decay, pretrain=pretrain, train=train)

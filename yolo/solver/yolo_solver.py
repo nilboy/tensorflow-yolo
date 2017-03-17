@@ -91,15 +91,17 @@ class YoloSolver(Solver):
       np_images, np_labels, np_objects_num = self.dataset.batch()
       # 训练模型一个batch
       _, loss_value, nilboy = sess.run([self.train_op, self.total_loss, self.nilboy], 
-                                      feed_dict= { self.images: np_images, 
-                                                   self.labels: np_labels, 
-                                                   self.objects_num: np_objects_num
-                                                 })
+                                        feed_dict= { 
+                                                  self.images: np_images, 
+                                                  self.labels: np_labels, 
+                                                  self.objects_num: np_objects_num 
+                                                  })
       #loss_value, nilboy = sess.run([self.total_loss, self.nilboy], feed_dict={self.images: np_images, self.labels: np_labels, self.objects_num: np_objects_num})
-      duration = time.time() - start_time
 
+      duration = time.time() - start_time
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
+      #10次迭代输入计算信息
       if step % 10 == 0:
         num_examples_per_step = self.dataset.batch_size
         examples_per_sec = num_examples_per_step / duration
@@ -111,6 +113,7 @@ class YoloSolver(Solver):
                              examples_per_sec, sec_per_batch))
 
         sys.stdout.flush()
+      # 100次迭代更新后将预测结果写入文件
       if step % 100 == 0:
         summary_str = sess.run(summary_op, feed_dict={
                                                 self.images: np_images, 
@@ -118,6 +121,7 @@ class YoloSolver(Solver):
                                                 self.objects_num: np_objects_num
                                                 })
         summary_writer.add_summary(summary_str, step)
+      # 5000次迭代保存一个模型
       if step % 5000 == 0:
         saver2.save(sess, self.train_dir + '/model.ckpt', global_step=step)
     sess.close()

@@ -41,7 +41,16 @@ class YoloTinyNet(Net):
       predicts: 4-D tensor [batch_size, cell_size, cell_size, num_classes + 5 * boxes_per_cell]
     """
     conv_num = 1
-
+    """
+    conv2d(self, scope, input, kernel_size, stride=1, pretrain=True, train=True)
+    Args:
+      input: 4-D tensor [batch_size, height, width, depth]
+      scope: variable_scope name 
+      kernel_size: [k_height, k_width, in_channel, out_channel]
+      stride: int32
+    Return:
+      output: 4-D tensor [batch_size, height/stride, width/stride, out_channels]
+    """
     temp_conv = self.conv2d('conv' + str(conv_num), images, [3, 3, 3, 16], stride=1)
     conv_num += 1
 
@@ -98,7 +107,7 @@ class YoloTinyNet(Net):
     scales = tf.reshape(local3[:, n1:n2], (-1, self.cell_size, self.cell_size, self.boxes_per_cell))
     boxes = tf.reshape(local3[:, n2:], (-1, self.cell_size, self.cell_size, self.boxes_per_cell * 4))
 
-    local3 = tf.concat([class_probs, scales, boxes], 3)
+    local3 = tf.concat(3, [class_probs, scales, boxes])
 
     predicts = local3
 
@@ -273,7 +282,7 @@ class YoloTinyNet(Net):
     class_loss = tf.constant(0, tf.float32)       # 分类损失
     object_loss = tf.constant(0, tf.float32)      # 有对象的时候与ground truth的损失
     noobject_loss = tf.constant(0, tf.float32)    # 预测框中没有对象的时候的损失
-    coord_loss = tf.constant(0, tf.float32)       # 
+    coord_loss = tf.constant(0, tf.float32)       # 预测框位置信息损失
 
     loss = [0, 0, 0, 0]
     for i in range(self.batch_size):
@@ -281,6 +290,7 @@ class YoloTinyNet(Net):
       label = labels[i, :, :]
       object_num = objects_num[i]
       nilboy = tf.ones([7,7,2])
+      # 返回值就是被调用函数题的输入数据
       tuple_results = tf.while_loop(self.cond1,# 其输入参数就是后面list中的变量
                                     self.body1,# 输入参数就是其后的list变量，详细见其定义 
                                     [  tf.constant(0), 
@@ -290,6 +300,7 @@ class YoloTinyNet(Net):
                                        label, 
                                        nilboy
                                     ])
+      #累加各类loss值
       for j in range(4):
         loss[j] = loss[j] + tuple_results[2][j]
       nilboy = tuple_results[5]
