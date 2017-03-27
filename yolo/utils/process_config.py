@@ -1,3 +1,9 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
+"""
+从配置文件中读取相应的配置参数设置
+这个方法是可以重用的
+"""
 import ConfigParser
 
 def process_config(conf_file):

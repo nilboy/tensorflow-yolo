@@ -1,3 +1,6 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
+
 """Solver Abstract class 
 """
 class Solver(object):

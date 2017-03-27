@@ -1,3 +1,6 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
+
 """DataSet  base class 
 """
 class DataSet(object):

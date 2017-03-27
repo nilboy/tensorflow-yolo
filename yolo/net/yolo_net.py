@@ -1,3 +1,5 @@
+#!/usr/bin/python 
+# -*- coding: utf-8 -*- 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -123,6 +125,7 @@ class YoloNet(Net):
     Return:
       iou: 3-D tensor [CELL_SIZE, CELL_SIZE, BOXES_PER_CELL]
     """
+    # 计算左上角和右下角的位置信息
     boxes1 = tf.pack([boxes1[:, :, :, 0] - boxes1[:, :, :, 2] / 2, boxes1[:, :, :, 1] - boxes1[:, :, :, 3] / 2,
                       boxes1[:, :, :, 0] + boxes1[:, :, :, 2] / 2, boxes1[:, :, :, 1] + boxes1[:, :, :, 3] / 2])
     boxes1 = tf.transpose(boxes1, [1, 2, 3, 0])
@@ -134,6 +137,16 @@ class YoloNet(Net):
     rd = tf.minimum(boxes1[:, :, :, 2:], boxes2[2:])
 
     #intersection
+    '''
+    0, 0------------------------>
+    |    ————————————|
+    |    |     ——————|——————    
+    |    |     |     |      |
+    |    |—————|—————|      |
+    |          |____________| 
+    |
+    v
+    '''
     intersection = rd - lu 
 
     inter_square = intersection[:, :, :, 0] * intersection[:, :, :, 1]
@@ -304,7 +317,17 @@ class YoloNet(Net):
       label = labels[i, :, :]
       object_num = objects_num[i]
       nilboy = tf.ones([7,7,2])
-      tuple_results = tf.while_loop(self.cond1, self.body1, [tf.constant(0), object_num, [class_loss, object_loss, noobject_loss, coord_loss], predict, label, nilboy])
+      tuple_results = tf.while_loop(
+                        self.cond1, 
+                        self.body1, 
+                        [
+                            tf.constant(0), 
+                            object_num, 
+                            [class_loss, object_loss, noobject_loss, coord_loss], 
+                            predict, 
+                            label, 
+                            nilboy
+                        ])
       for j in range(4):
         loss[j] = loss[j] + tuple_results[2][j]
       nilboy = tuple_results[5]
