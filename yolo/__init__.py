@@ -1,3 +1,3 @@
-from . import dataset
-from . import net
-from . import solver
+import dataset
+import net
+import solver

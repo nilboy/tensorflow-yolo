@@ -1,5 +1,8 @@
-#tensorflow-yolo
-###download pretrained model
+# tensorflow-yolo
+
+### Require
+	tensorflow-1.0
+### download pretrained model
 
 yolo_tiny: <a>https://drive.google.com/file/d/0B-yiAeTLLamRekxqVE01Yi1RRlk/view?usp=sharing</a>
 
@@ -7,7 +10,7 @@ yolo_tiny: <a>https://drive.google.com/file/d/0B-yiAeTLLamRekxqVE01Yi1RRlk/view?
 	mv yolo_tiny.ckpt models/pretrain/ 
 ```
 
-###Train
+### Train
 
 #### Train on pascal-voc2007 data 
 
@@ -61,7 +64,7 @@ python tools/train.py -c conf/train.cfg
 
 3. train (python tools/train.py -c $your_configure_file)
 
-###test demo
+### test demo
 
 ```
 python demo.py

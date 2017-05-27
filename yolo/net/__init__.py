@@ -1,3 +1,3 @@
-from . import net
-from . import yolo_net
-from . import yolo_tiny_net
+import net
+import yolo_net
+import yolo_tiny_net
