@@ -1,0 +1,4 @@
+.idea/
+yolo/__pycache__
+yolo/net/__pycache__
+*.ckpt
