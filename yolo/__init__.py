@@ -1,3 +1,3 @@
-import dataset
-import net
-import solver
+import yolo.dataset
+import yolo.net
+import yolo.solver
